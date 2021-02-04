@@ -1,19 +1,7 @@
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
 
-//connect to database
-const {Pool} = require('pg');
-const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  user: 'vagrant',
-  password: '123',
-  database: 'lightbnb'
-});
-
-
-pool.connect();
-
+const pool = require('./db/index');
 /// Users
 
 /**
