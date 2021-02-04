@@ -9,7 +9,7 @@ const pool = new Pool({
   user: 'vagrant',
   password: '123',
   database: 'lightbnb'
-}) 
+});
 
 
 pool.connect();
@@ -26,12 +26,9 @@ const getUserWithEmail = function(email) {
     `SELECT * FROM users
     WHERE email = $1;
     `, [email])
-    .then (data => {
-      console.log(data.rows);
-      return data.rows[0];
-     })
-    .catch(e => null)
-}
+    .then(data => data.rows[0])
+    .catch(e => null);
+};
 exports.getUserWithEmail = getUserWithEmail;
 
 /**
@@ -44,9 +41,9 @@ const getUserWithId = function(id) {
     `SELECT * FROM users
     WHERE id = $1;
     `, [id])
-    .then (data => data.rows[0])
-    .catch(e => null)
-}
+    .then(data => data.rows[0])
+    .catch(e => null);
+};
 exports.getUserWithId = getUserWithId;
 
 
@@ -61,9 +58,9 @@ const addUser =  function(user) {
     VALUES ($1, $2, $3)
     RETURNING id;
     `, [user.name, user.email, user.password])
-    .then (data => data.rows[0])
-    .catch(e => null)
-}
+    .then(data => data.rows[0])
+    .catch(e => null);
+};
 exports.addUser = addUser;
 
 /// Reservations
@@ -74,8 +71,19 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
-}
+  return pool.query(
+    `SELECT res.*, prop.*, AVG(pr.rating) AS "average_rating"
+    FROM reservations res 
+    JOIN properties prop ON res.property_id = prop.id
+    JOIN property_reviews pr ON prop.id = pr.property_id
+    WHERE res.guest_id = $1 AND res.end_date < Now()::DATE
+    GROUP BY res.id, prop.id
+    ORDER BY start_date
+    LIMIT $2;
+    `, [guest_id, limit])
+    .then(data => data.rows)
+    .catch(e => null);
+};
 exports.getAllReservations = getAllReservations;
 
 /// Properties
@@ -91,8 +99,8 @@ const getAllProperties = function(options, limit = 10) {
   SELECT * FROM properties 
   LIMIT $1;
   `, [limit])
-  .then(data => data.rows)
-}
+    .then(data => data.rows);
+};
 exports.getAllProperties = getAllProperties;
  
 
@@ -106,5 +114,5 @@ const addProperty = function(property) {
   property.id = propertyId;
   properties[propertyId] = property;
   return Promise.resolve(property);
-}
+};
 exports.addProperty = addProperty;
