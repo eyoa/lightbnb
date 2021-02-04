@@ -100,7 +100,7 @@ const getAllProperties = function(options, limit = 10) {
   let queryString = `
   SELECT p.*, AVG(pr.rating) AS "average_rating"
   FROM properties p 
-  JOIN property_reviews pr ON p.id = pr.property_id
+  LEFT JOIN property_reviews pr ON p.id = pr.property_id
   `;
 
   // get array of keys with actual values
@@ -129,6 +129,7 @@ const getAllProperties = function(options, limit = 10) {
           queryString += ` city LIKE $${queryParams.length} `;
           break;
         case 'owner_id':
+          console.log("checking ownerid", options[key]);
           queryParams.push(Number(options[key]));
           queryString += ` owner_id = $${queryParams.length} `;
           break;
@@ -158,8 +159,13 @@ const getAllProperties = function(options, limit = 10) {
   LIMIT $${queryParams.length};
   `;
 
+  console.log(queryString, queryParams);
   return pool.query(queryString, queryParams)
-    .then(res => res.rows);
+    .then(data => {
+      console.log("What is retuned getAllProperties");
+      console.log(data.rows);
+      return data.rows;
+    });
 };
 exports.getAllProperties = getAllProperties;
  
@@ -170,9 +176,50 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  const updateParams = [];
+  let updateString = `INSERT INTO properties (`;
+  console.log("property object is");
+  console.log(property);
+
+  const keys = Object.keys(property);
+  for (const key of keys) {
+    updateString += key;
+    if (keys.indexOf(key) ===  keys.length - 1) {
+      updateString +=  `) `;
+    } else {
+      updateString +=  `, `;
+    }
+  }
+  updateString +=  `VALUES (`;
+  
+  for (const key of keys) {
+    // check to push correct type to db
+    const numRegex = new RegExp("^[0-9]*$", "gm");
+    if (typeof property[key] === 'string' && numRegex.test(property[key]) && key !== 'post_code') {
+      updateParams.push(Number(property[key]));
+    } else {
+      updateParams.push(property[key]);
+    }
+    
+    if (keys.indexOf(key) ===  keys.length - 1) {
+      updateString += `$${updateParams.length} ) `;
+    } else {
+      updateString += `$${updateParams.length}, `;
+    }
+  }
+
+  updateString += `RETURNING *;`;
+
+  console.log("======================================================= ");
+  console.log(updateString);
+  console.log(updateParams);
+
+  return pool.query(updateString, updateParams)
+    .then(data => {
+      console.log("return from addProperty");
+      console.log(data.rows);
+      return data.rows;
+    })
+    .catch(e => null);
 };
 exports.addProperty = addProperty;
