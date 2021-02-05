@@ -1,6 +1,3 @@
-const properties = require('./json/properties.json');
-const users = require('./json/users.json');
-
 const pool = require('./db/index');
 /// Users
 
@@ -117,7 +114,6 @@ const getAllProperties = function(options, limit = 10) {
           queryString += ` city LIKE $${queryParams.length} `;
           break;
         case 'owner_id':
-          console.log("checking ownerid", options[key]);
           queryParams.push(Number(options[key]));
           queryString += ` owner_id = $${queryParams.length} `;
           break;
@@ -147,11 +143,8 @@ const getAllProperties = function(options, limit = 10) {
   LIMIT $${queryParams.length};
   `;
 
-  console.log(queryString, queryParams);
   return pool.query(queryString, queryParams)
     .then(data => {
-      console.log("What is retuned getAllProperties");
-      console.log(data.rows);
       return data.rows;
     });
 };
@@ -166,8 +159,6 @@ exports.getAllProperties = getAllProperties;
 const addProperty = function(property) {
   const updateParams = [];
   let updateString = `INSERT INTO properties (`;
-  console.log("property object is");
-  console.log(property);
 
   const keys = Object.keys(property);
   for (const key of keys) {
@@ -198,16 +189,57 @@ const addProperty = function(property) {
 
   updateString += `RETURNING *;`;
 
-  console.log("======================================================= ");
-  console.log(updateString);
-  console.log(updateParams);
-
   return pool.query(updateString, updateParams)
     .then(data => {
-      console.log("return from addProperty");
-      console.log(data.rows);
       return data.rows;
     })
     .catch(e => null);
 };
 exports.addProperty = addProperty;
+
+
+
+const addReservations = function(reservation) {
+  const updateParams = [];
+  console.log(reservation);
+
+  let updateString = `INSERT INTO reservations (`;
+
+  const keys = Object.keys(reservation);
+  console.log("Do we have keys?", keys);
+
+  for (const key of keys) {
+    updateString += key;
+    if (keys.indexOf(key) ===  keys.length - 1) {
+      updateString +=  `) `;
+    } else {
+      updateString +=  `, `;
+    }
+  }
+  updateString +=  `VALUES (`;
+  
+  for (const key of keys) {
+    // check to push correct type to db
+    const numRegex = new RegExp("^[0-9]*$", "gm");
+    if (typeof reservation[key] === 'string' && numRegex.test(reservation[key]) && key) {
+      updateParams.push(Number(reservation[key]));
+    } else {
+      updateParams.push(reservation[key]);
+    }
+    
+    if (keys.indexOf(key) ===  keys.length - 1) {
+      updateString += `$${updateParams.length} ) `;
+    } else {
+      updateString += `$${updateParams.length}, `;
+    }
+  }
+
+  updateString += `RETURNING *;`;
+
+  return pool.query(updateString, updateParams)
+    .then(data => {
+      return data.rows;
+    })
+    .catch(e => null);
+};
+exports.addReservations = addReservations;

@@ -19,7 +19,15 @@ $(() => {
             : ``}
           <footer class="property-listing__footer">
             <div class="property-listing__rating">${Math.round(property.average_rating * 100) / 100}/5 stars</div>
-            <div class="property-listing__price">$${property.cost_per_night/100.0}/night</div>
+            <div class="property-listing__price">$${property.cost_per_night/100.0}/night</div>     
+            <form action="/api/reservations" method="POST" class="reservationForm">
+              <label for= "start-date"> Starting from: </label>
+                  <input type="date" id = "start_date" name = "start_date">
+                <label for= "end-date"> Starting from: </label>
+                  <input type="date" id = "end_date" name = "end_date">
+                  <input type="hidden" name ="property_id" value="${property.id}">
+              <button type="submit" class="theButton" >Make Reservation</button>
+            </form>
           </footer>
         </section>
       </article>
@@ -28,4 +36,8 @@ $(() => {
 
   window.propertyListing.createListing = createListing;
 
+
 });
+
+
+

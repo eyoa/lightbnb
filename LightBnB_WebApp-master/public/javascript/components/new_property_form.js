@@ -116,9 +116,4 @@ $(() => {
     })
   });
 
-  $('body').on('click', '#property-form__cancel', function() {
-    views_manager.show('listings');
-    return false;
-  });
-  
 });

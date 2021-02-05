@@ -23,8 +23,9 @@ $(() => {
       const property = properties[propertyId];
       const listing = propertyListing.createListing(property, isReservation);
       addListing(listing);
+      
     }
+
   }
   window.propertyListings.addProperties = addProperties;
-
 });
